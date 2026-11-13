@@ -1,0 +1,29 @@
+{
+	"geode": ">=v5.0.0",
+	"gd": {
+		"win": "2.2081",
+		"android": "2.2081",
+		"mac": "2.2081",
+		"ios": "2.2081"
+	},
+	"id": "kzx.modmenu",
+	"name": "Mod Menu",
+	"version": "v1.0.0",
+	"developer": "kzx",
+	"description": "A big, tabbed mod menu with hundreds of hack toggles, a search bar and a fake heartbeat monitor.",
+	"dependencies": {
+		"geode.node-ids": ">=v1.0.0"
+	},
+	"settings": {
+		"open-menu": {
+			"type": "keybind",
+			"name": "Open Mod Menu",
+			"description": "Press this in-game to open or close the mod menu. Defaults to Tab.",
+			"default": "Tab"
+		}
+	},
+	"tags": [
+		"interface",
+		"offline"
+	]
+}

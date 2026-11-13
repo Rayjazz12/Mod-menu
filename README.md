@@ -49,7 +49,13 @@ Then, from this folder, in PowerShell:
 
 The script looks for `GEODE_SDK` (and a few common install locations), falls
 back to the CMake bundled with Visual Studio when `cmake` is not on `PATH`, and
-stops with an actionable message if the SDK or C++ toolchain is missing. If
+stops with an actionable message if the SDK or C++ toolchain is missing.
+
+Geode requires the `"geode"` field in `mod.json` to match the SDK version
+exactly at build time, so it is pinned to `5.11.2` here. If you build against a
+different SDK (or bump the `sdk:` input in the workflow), set that field to the
+installed version or CMake will stop with "Please change the Geode version in
+your mod.json". If
 PowerShell blocks the script (`running scripts is disabled`), run it once with
 `powershell -ExecutionPolicy Bypass -File .\build.ps1`.
 

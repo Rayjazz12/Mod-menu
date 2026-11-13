@@ -8,7 +8,10 @@ Mega Hack layout.
 - per-category `ALL ON` / `ALL OFF`
 - every toggle is saved between sessions
 - **fake heartbeat monitor**: an animated ECG trace, drifting BPM readout and a
-  pulse on every beat, plus a live enabled-hacks counter
+  pulse on every beat, plus a live enabled-hacks counter in the menu
+- **gameplay vitals HUD**: a dark outlined box in the top-left corner with a
+  pulsing red heart and a big BPM number that climbs the further you get into
+  the level
 - opens with `Tab` (rebindable in the mod's settings) or the `Menu` button on the
   main menu
 
@@ -25,6 +28,7 @@ src/main.cpp              MenuLayer button + Tab keybind listener
 src/Hacks.{hpp,cpp}       hack catalogue, search and saved toggle state
 src/ModMenuPopup.*        the popup: sidebar, search, scrolling list
 src/HeartbeatMonitor.hpp  the fake ECG widget (CCDrawNode)
+src/VitalsOverlay.*      the top-left gameplay HUD (heart + BPM readout)
 .github/workflows/build.yml  CI: builds every platform and packages the .geode
 ```
 

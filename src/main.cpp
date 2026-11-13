@@ -1,9 +1,11 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/MenuLayer.hpp>
+#include <Geode/modify/PlayLayer.hpp>
 #include <Geode/loader/GameEvent.hpp>
 #include <Geode/loader/SettingV3.hpp>
 
 #include "ModMenuPopup.hpp"
+#include "VitalsOverlay.hpp"
 
 using namespace geode::prelude;
 
@@ -46,5 +48,17 @@ class $modify(ModMenuLayer, MenuLayer) {
 
     void onMenuButton(CCObject*) {
         ModMenuPopup::openMenu();
+    }
+};
+
+// The fake vitals monitor also runs as a HUD while you play.
+class $modify(VitalsPlayLayer, PlayLayer) {
+    bool init(GJGameLevel* level, bool dontCreateObjects) {
+        if (!PlayLayer::init(level, dontCreateObjects)) {
+            return false;
+        }
+
+        VitalsOverlay::addTo(this);
+        return true;
     }
 };

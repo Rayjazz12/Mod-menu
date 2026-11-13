@@ -18,15 +18,16 @@ constexpr float kSideTop = 240.f;
 constexpr float kSideSpacing = 15.f;
 
 constexpr float kListX = 124.f;
-constexpr float kListY = 90.f;
 constexpr float kListW = 320.f;
-constexpr float kListH = 142.f;
+constexpr float kRowsTop = 230.f;
 constexpr float kRowH = 19.f;
+constexpr int kRowsPerPage = 7;
+constexpr float kPageY = 84.f;
 
 constexpr float kVitalsX = 124.f;
-constexpr float kVitalsY = 16.f;
+constexpr float kVitalsY = 12.f;
 constexpr float kVitalsW = 320.f;
-constexpr float kVitalsH = 66.f;
+constexpr float kVitalsH = 60.f;
 
 ccColor3B const kBgIdle{ 84, 96, 116 };
 ccColor3B const kBgActive{ 92, 206, 168 };
@@ -89,6 +90,7 @@ bool ModMenuPopup::init() {
     this->buildSidebar();
     this->buildHeader();
     this->buildVitals();
+    this->buildPager();
     this->rebuildList();
 
     return true;
@@ -156,7 +158,9 @@ void ModMenuPopup::refreshSidebar() {
     for (size_t i = 0; i < m_tabButtons.size(); ++i) {
         auto item = m_tabButtons[i];
         if (auto image = typeinfo_cast<NineSlice*>(item->getNormalImage())) {
-            image->setColor(i < categories.size() && categories[i] == m_category ? kSideActive : kSideIdle);
+            image->setColor(
+                i < categories.size() && categories[i] == m_category ? kSideActive : kSideIdle
+            );
         }
     }
 }
@@ -167,14 +171,15 @@ void ModMenuPopup::buildHeader() {
     m_searchInput->setScale(0.8f);
     m_searchInput->setCallback([this](std::string const& text) {
         m_search = text;
+        m_page = 0;
         this->rebuildList();
     });
     m_mainLayer->addChild(m_searchInput);
 
-    m_scroll = ScrollLayer::create({ kListW, kListH });
-    m_scroll->setPosition({ kListX, kListY });
-    m_scroll->setAnchorPoint({ 0.f, 0.f });
-    m_mainLayer->addChild(m_scroll);
+    m_listMenu = CCMenu::create();
+    m_listMenu->setPosition({ 0.f, 0.f });
+    m_listMenu->setAnchorPoint({ 0.f, 0.f });
+    m_mainLayer->addChild(m_listMenu);
 }
 
 void ModMenuPopup::buildVitals() {
@@ -185,29 +190,29 @@ void ModMenuPopup::buildVitals() {
     m_vitalsBg->setOpacity(210);
     m_mainLayer->addChild(m_vitalsBg);
 
-    m_monitor = HeartbeatMonitor::create(186.f, 46.f);
-    m_monitor->setPosition({ kVitalsX + 8.f, kVitalsY + 10.f });
+    m_monitor = HeartbeatMonitor::create(186.f, 42.f);
+    m_monitor->setPosition({ kVitalsX + 8.f, kVitalsY + 8.f });
     m_mainLayer->addChild(m_monitor);
 
     m_bpmLabel = CCLabelBMFont::create("72 BPM", "bigFont.fnt");
     m_bpmLabel->setScale(0.45f);
     m_bpmLabel->setColor({ 120, 255, 170 });
     m_bpmLabel->setAnchorPoint({ 0.f, 0.5f });
-    m_bpmLabel->setPosition({ kVitalsX + 206.f, kVitalsY + 42.f });
+    m_bpmLabel->setPosition({ kVitalsX + 206.f, kVitalsY + 38.f });
     m_mainLayer->addChild(m_bpmLabel);
 
     m_rhythmLabel = CCLabelBMFont::create("SINUS RHYTHM", "bigFont.fnt");
     m_rhythmLabel->setScale(0.22f);
     m_rhythmLabel->setColor({ 130, 170, 150 });
     m_rhythmLabel->setAnchorPoint({ 0.f, 0.5f });
-    m_rhythmLabel->setPosition({ kVitalsX + 206.f, kVitalsY + 27.f });
+    m_rhythmLabel->setPosition({ kVitalsX + 206.f, kVitalsY + 24.f });
     m_mainLayer->addChild(m_rhythmLabel);
 
     m_countLabel = CCLabelBMFont::create("", "bigFont.fnt");
     m_countLabel->setScale(0.22f);
     m_countLabel->setColor({ 150, 200, 175 });
     m_countLabel->setAnchorPoint({ 0.f, 0.5f });
-    m_countLabel->setPosition({ kVitalsX + 206.f, kVitalsY + 14.f });
+    m_countLabel->setPosition({ kVitalsX + 206.f, kVitalsY + 11.f });
     m_mainLayer->addChild(m_countLabel);
 
     m_monitor->setOnBeat([this]() {
@@ -227,29 +232,56 @@ void ModMenuPopup::buildVitals() {
     });
 }
 
-void ModMenuPopup::rebuildList() {
-    if (m_listMenu) {
-        m_listMenu->removeFromParent();
-        m_listMenu = nullptr;
+void ModMenuPopup::buildPager() {
+    m_pagerMenu = CCMenu::create();
+    m_pagerMenu->setPosition({ 0.f, 0.f });
+    m_pagerMenu->setAnchorPoint({ 0.f, 0.f });
+    m_mainLayer->addChild(m_pagerMenu);
+
+    char const* arrows[] = { "<", ">" };
+    for (int i = 0; i < 2; ++i) {
+        auto bg = makePanel(26.f, 15.f);
+        bg->setColor({ 60, 70, 88 });
+        bg->setOpacity(180);
+
+        auto item = CCMenuItemSpriteExtra::create(
+            bg, this, menu_selector(ModMenuPopup::onPage)
+        );
+        item->setTag(i == 0 ? -1 : 1);
+
+        auto label = CCLabelBMFont::create(arrows[i], "bigFont.fnt");
+        label->setScale(0.4f);
+        item->addChild(label);
+
+        item->setPosition({ i == 0 ? kListX + 13.f : kListX + kListW - 13.f, kPageY });
+        m_pagerMenu->addChild(item);
     }
-    if (!m_scroll || !m_scroll->m_contentLayer) {
+
+    m_pageLabel = CCLabelBMFont::create("1/1", "bigFont.fnt");
+    m_pageLabel->setScale(0.3f);
+    m_pageLabel->setColor({ 180, 200, 220 });
+    m_pageLabel->setPosition({ kListX + kListW / 2.f, kPageY });
+    m_mainLayer->addChild(m_pageLabel);
+}
+
+void ModMenuPopup::rebuildList() {
+    if (!m_listMenu) {
         return;
     }
+    m_listMenu->removeAllChildren();
 
     m_visible = filterHacks(m_category, m_search);
 
-    float contentHeight = std::max(static_cast<float>(m_visible.size()) * kRowH, kListH + 1.f);
-    m_scroll->setContentLayerSize({ kListW, contentHeight });
+    int const total = static_cast<int>(m_visible.size());
+    int const pages = std::max(1, (total + kRowsPerPage - 1) / kRowsPerPage);
+    m_page = std::clamp(m_page, 0, pages - 1);
 
-    m_listMenu = CCMenu::create();
-    m_listMenu->setPosition({ 0.f, contentHeight });
-    m_listMenu->setAnchorPoint({ 0.f, 0.f });
-    m_scroll->m_contentLayer->addChild(m_listMenu);
+    int const start = m_page * kRowsPerPage;
+    int const end = std::min(total, start + kRowsPerPage);
+    float const rowWidth = kListW - 6.f;
 
-    float rowWidth = kListW - 6.f;
-
-    for (size_t i = 0; i < m_visible.size(); ++i) {
-        auto const& hack = m_visible[i];
+    for (int i = start; i < end; ++i) {
+        auto const& hack = m_visible[static_cast<size_t>(i)];
         bool on = isHackEnabled(hack.id);
 
         auto bg = makePanel(rowWidth, kRowH - 3.f);
@@ -259,7 +291,7 @@ void ModMenuPopup::rebuildList() {
         auto item = CCMenuItemSpriteExtra::create(
             bg, this, menu_selector(ModMenuPopup::onToggle)
         );
-        item->setTag(static_cast<int>(i));
+        item->setTag(i);
 
         auto label = CCLabelBMFont::create(hack.name.c_str(), "bigFont.fnt");
         label->setScale(0.26f);
@@ -275,13 +307,24 @@ void ModMenuPopup::rebuildList() {
         check->setTag(2);
         item->addChild(check);
 
-        item->setPosition({ kListW / 2.f, -(kRowH * (static_cast<float>(i) + 0.5f)) });
+        float const y = kRowsTop - kRowH * static_cast<float>(i - start) - kRowH / 2.f;
+        item->setPosition({ kListX + kListW / 2.f, y });
         m_listMenu->addChild(item);
     }
 
-    m_scroll->moveToTop();
-
     this->updateCounter();
+    this->updatePager();
+}
+
+void ModMenuPopup::updatePager() {
+    if (!m_pageLabel) {
+        return;
+    }
+    int const total = static_cast<int>(m_visible.size());
+    int const pages = std::max(1, (total + kRowsPerPage - 1) / kRowsPerPage);
+    m_pageLabel->setString(
+        (std::to_string(m_page + 1) + "/" + std::to_string(pages)).c_str()
+    );
 }
 
 void ModMenuPopup::updateCounter() {
@@ -301,7 +344,14 @@ void ModMenuPopup::onCategory(cocos2d::CCObject* sender) {
         return;
     }
     m_category = categories[index];
+    m_page = 0;
     this->refreshSidebar();
+    this->rebuildList();
+}
+
+void ModMenuPopup::onPage(cocos2d::CCObject* sender) {
+    auto node = static_cast<cocos2d::CCNode*>(sender);
+    m_page += node->getTag();
     this->rebuildList();
 }
 

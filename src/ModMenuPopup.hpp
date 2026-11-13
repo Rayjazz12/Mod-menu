@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Geode/Geode.hpp>
+#include <Geode/binding/CCMenuItemSpriteExtra.hpp>
 #include <Geode/ui/NineSlice.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/ui/ScrollLayer.hpp>
@@ -51,5 +52,5 @@ private:
     std::string m_category;
     std::string m_search;
     std::vector<HackDef> m_visible;
-    std::vector<cocos2d::CCMenuItemSpriteExtra*> m_tabButtons;
+    std::vector<CCMenuItemSpriteExtra*> m_tabButtons;
 };

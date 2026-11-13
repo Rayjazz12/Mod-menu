@@ -34,11 +34,11 @@ class $modify(ModMenuLayer, MenuLayer) {
             menu->updateLayout();
         }
         else {
-            auto menu = CCMenu::create();
-            menu->setPosition({ 0.f, 0.f });
+            auto fallbackMenu = CCMenu::create();
+            fallbackMenu->setPosition({ 0.f, 0.f });
             button->setPosition({ 36.f, 28.f });
-            menu->addChild(button);
-            this->addChild(menu);
+            fallbackMenu->addChild(button);
+            this->addChild(fallbackMenu);
         }
 
         return true;

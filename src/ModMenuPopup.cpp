@@ -321,7 +321,7 @@ void ModMenuPopup::onToggle(cocos2d::CCObject* sender) {
             on ? "GJ_checkOn_001.png" : "GJ_checkOff_001.png"
         ));
     }
-    if (auto itemSprite = typeinfo_cast<cocos2d::CCMenuItemSpriteExtra*>(sender)) {
+    if (auto itemSprite = typeinfo_cast<CCMenuItemSpriteExtra*>(sender)) {
         if (auto image = typeinfo_cast<NineSlice*>(itemSprite->getNormalImage())) {
             image->setColor(on ? kBgActive : kBgIdle);
         }
